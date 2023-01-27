@@ -9,8 +9,8 @@ class Dataset:
     def __init__(
         self,
         filepath: str,
-        encoding: Optional[str] = 'utf-8',
-        transformation_func: Optional[Callable[[TextIO], Iterable[Any]]] = None
+        encoding: Optional[str] = "utf-8",
+        transformation_func: Optional[Callable[[TextIO], Iterable[Any]]] = None,
     ) -> None:
 
         self.filepath = filepath
@@ -22,15 +22,11 @@ class Dataset:
             yield from self.transformation_func(f)
 
     @classmethod
-    def from_jsonl(
-            cls, filepath: str, encoding: Optional[str] = 'utf-8'
-    ) -> 'Dataset':
+    def from_jsonl(cls, filepath: str, encoding: Optional[str] = "utf-8") -> "Dataset":
         return cls(filepath, encoding, lambda f: map(json.loads, f))
 
     @classmethod
-    def from_csv(
-        cls, filepath: str, encoding: Optional[str] = 'utf-8'
-    ) -> 'Dataset':
+    def from_csv(cls, filepath: str, encoding: Optional[str] = "utf-8") -> "Dataset":
         return cls(filepath, encoding, csv.DictReader)
 
 
@@ -48,13 +44,11 @@ class NERDataset(TaskDataset):
     example_class = NERExample
 
     def to_conll2003(
-        self, tokenizer: Callable[[str], List[str]]
+        self, tokenizer: Callable[[str], List[str]], selected_label: str
     ) -> Iterator[str]:
         for example in self:
-            yield from example.to_conll2003(tokenizer)
+            yield from example.to_conll2003(tokenizer, selected_label)
 
-    def to_spacy(
-        self, tokenizer: Callable[[str], List[str]]
-    ) -> Iterator[dict]:
+    def to_spacy(self, tokenizer: Callable[[str], List[str]]) -> Iterator[dict]:
         for example in self:
             yield from example.to_spacy(tokenizer)

@@ -73,7 +73,9 @@ def create_bio_tags(
         token_end = token_start + len(token)
         if i >= n or token_end < labels[i][0]:
             tags.append('O')
-        elif token_start > labels[i][1]:
+#        elif token_start > labels[i][1]:# or token_start < labels[i][0] :
+        elif token_start > labels[i][1] or token_start < labels[i][0] : # FIX Andrea
+
             tags.append('O')
         else:
             tags.append(prefix + str(labels[i][2]))

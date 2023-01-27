@@ -56,9 +56,24 @@ class NERExample:
     def is_valid(self, raise_exception: Optional[bool] = True) -> bool:
         return True
 
-    def to_conll2003(self, tokenizer: Callable[[str], List[str]]) -> Iterator[dict]:
+    def to_conll2003(
+        self, tokenizer: Callable[[str], List[str]], selected_label: str
+    ) -> Iterator[dict]:
         all_tokens, all_token_offsets = self.get_tokens_and_token_offsets(tokenizer)
+        #       import pdb
+
+        #        pdb.set_trace()
+
+        # if len(self.labels) == 0:
+        #    self.labels[0] = []
         for user, labels in self.labels.items():
+      
+
+            if selected_label is not None:
+            #    print("FILTERING")
+                labels = [x for x in labels if x[2] == selected_label]
+           # print([self.raw['text'][x[0]:x[1]]  for x in labels])
+            ok_labels = set([self.raw['text'][x[0]:x[1]]  for x in labels])
             label_split = [[] for _ in range(len(self.sentences))]
             for label in labels:
                 for i, (start, end) in enumerate(
@@ -68,11 +83,20 @@ class NERExample:
                         label_split[i].append(label)
             # lines = ["-DOCSTART- -X- -X- O\n\n"]
             lines = []
-
+            tot_tokens = 0
             for tokens, offsets, label in zip(
                 all_tokens, all_token_offsets, label_split
             ):
+              #  if tokens[0] == "Applicazioni":
+             #       import pdb; pdb.set_trace()
                 tags = utils.create_bio_tags(tokens, offsets, label)
+                print(tokens, tags)
+                tot_tokens += len(tokens)
+                if tot_tokens > 50:
+                    SPLIT = True
+                    tot_tokens = 0
+                else:
+                    SPLIT = False
                 for token, tag in zip(tokens, tags):
                     token = clean(
                         token,
@@ -81,7 +105,9 @@ class NERExample:
                         lower=False,  # Convert to lowercase
                     )  # Remove all punctuations)
                     lines.append(f"{token} _ _ {tag}\n")
-                lines.append("\n")
+
+                if SPLIT:
+                    lines.append("\n")
             yield {"user": user, "data": "".join(lines)}
 
     def to_spacy(self, tokenizer: Callable[[str], List[str]]) -> Iterator[dict]:
